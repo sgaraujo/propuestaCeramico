@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Propuesta E-Commerce · Cecropia</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:     #141810;
+  --forest:  #1c2e1e;
+  --moss:    #2e4a32;
+  --sage:    #5c7e60;
+  --fern:    #9ab89e;
+  --cream:   #f5f0e8;
+  --sand:    #e9e0cc;
+  --ochre:   #c47c20;
+  --terra:   #b84a24;
+  --white:   #fdfaf3;
+  --f-display: 'Cormorant Garamond', serif;
+  --f-body:    'Outfit', sans-serif;
+  --f-mono:    'JetBrains Mono', monospace;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--white); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.6; overflow-x: hidden; cursor: none; }
+.cursor { width: 8px; height: 8px; background: var(--terra); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: transform .15s ease; }
+.cursor-ring { width: 30px; height: 30px; border: 1px solid rgba(184,74,36,.4); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: transform .35s ease; }
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 2.5rem; background: rgba(253,250,243,.92); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(90,126,96,.1); }
+.nav-brand { font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; font-style: italic; color: var(--forest); }
+.nav-brand span { font-style: normal; font-weight: 300; color: var(--sage); font-size: .9rem; margin-left: .5rem; }
+.nav-slides { display: flex; gap: .4rem; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sand); border: none; cursor: none; transition: background .2s, transform .2s; }
+.nav-dot.active { background: var(--terra); transform: scale(1.4); }
+.progress { position: fixed; top: 0; left: 0; height: 2px; background: var(--terra); z-index: 200; transition: width .3s ease; }
+.slide { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 8rem 2rem 5rem; opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+.slide.visible { opacity: 1; transform: translateY(0); }
+.eyebrow { font-family: var(--f-mono); font-size: .62rem; letter-spacing: .3em; color: var(--ochre); text-transform: uppercase; margin-bottom: .8rem; }
+.slide-title { font-family: var(--f-display); font-size: clamp(2.4rem, 4.5vw, 3.8rem); font-weight: 700; line-height: 1; letter-spacing: -.02em; color: var(--forest); margin-bottom: 1.4rem; }
+.slide-title em { font-style: italic; color: var(--moss); }
+.slide-body { font-size: .93rem; font-weight: 300; color: #4a5e4e; line-height: 1.8; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; max-width: 1100px; width: 100%; align-items: center; }
+
+/* COVER */
+.s-cover { background: var(--forest); flex-direction: column; text-align: center; }
+.s-cover::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 50% 100%, rgba(46,74,50,.8) 0%, transparent 60%); }
+.cover-grid-bg { position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(255,255,255,.02) 80px), repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(255,255,255,.02) 80px); }
+.cover-eyebrow { font-family: var(--f-mono); font-size: .65rem; letter-spacing: .35em; color: var(--fern); text-transform: uppercase; position: relative; margin-bottom: 1.8rem; }
+.cover-title { font-family: var(--f-display); font-size: clamp(3.5rem, 10vw, 8rem); font-weight: 700; line-height: .9; color: var(--white); position: relative; letter-spacing: -.02em; }
+.cover-title em { font-style: italic; color: var(--fern); display: block; }
+.cover-subtitle { font-size: 1rem; font-weight: 300; color: rgba(245,240,232,.6); max-width: 430px; margin: 2rem auto 0; position: relative; }
+.cover-meta { position: relative; display: flex; gap: 2.5rem; margin-top: 3.5rem; justify-content: center; flex-wrap: wrap; }
+.cover-meta-item { text-align: center; }
+.cover-meta-item .val { font-family: var(--f-display); font-size: 1.8rem; font-weight: 700; color: var(--white); display: block; }
+.cover-meta-item .lbl { font-family: var(--f-mono); font-size: .55rem; letter-spacing: .2em; color: var(--sage); text-transform: uppercase; }
+.cover-divider { width: 1px; height: 40px; background: rgba(154,184,158,.2); align-self: center; }
+.cover-scroll-hint { position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+.cover-scroll-hint span { font-family: var(--f-mono); font-size: .55rem; letter-spacing: .25em; color: var(--sage); text-transform: uppercase; }
+.scroll-arrow { width: 1px; height: 36px; background: linear-gradient(to bottom, var(--sage), transparent); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+/* PROBLEM */
+.s-problem { background: var(--cream); }
+.problem-cards { display: flex; flex-direction: column; gap: 1rem; }
+.problem-card { background: var(--white); border-left: 3px solid var(--terra); border-radius: 0 4px 4px 0; padding: 1.1rem 1.4rem; display: flex; gap: 1rem; align-items: flex-start; }
+.problem-icon { font-size: 1.3rem; flex-shrink: 0; }
+.problem-card h4 { font-size: .88rem; font-weight: 600; color: var(--forest); margin-bottom: .2rem; }
+.problem-card p { font-size: .8rem; color: #5a6e5e; line-height: 1.6; }
+
+/* SOLUTION */
+.s-solution { background: var(--forest); }
+.s-solution .slide-title { color: var(--white); }
+.s-solution .eyebrow { color: var(--fern); }
+.s-solution .slide-body { color: var(--fern); }
+.solution-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; }
+.sol-card { background: rgba(255,255,255,.04); border: 1px solid rgba(154,184,158,.12); border-radius: 6px; padding: 1.4rem; transition: border-color .2s, background .2s; }
+.sol-card:hover { border-color: rgba(154,184,158,.3); background: rgba(154,184,158,.07); }
+.sol-num { font-family: var(--f-mono); font-size: .58rem; letter-spacing: .2em; color: var(--ochre); margin-bottom: .7rem; }
+.sol-title { font-family: var(--f-display); font-size: 1.15rem; font-weight: 600; color: var(--white); margin-bottom: .35rem; }
+.sol-desc { font-size: .8rem; color: var(--fern); line-height: 1.65; }
+
+/* CATALOG */
+.s-catalog { background: var(--white); }
+.catalog-inner { max-width: 1100px; width: 100%; }
+.catalog-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 1rem; margin-top: 2.5rem; }
+.cat-card { border-radius: 6px; overflow: hidden; border: 1px solid var(--sand); transition: transform .2s, box-shadow .2s; }
+.cat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(26,42,30,.1); }
+.cat-img { height: 110px; display: flex; align-items: center; justify-content: center; font-size: 2.6rem; }
+.c1{background:#1c2e1e} .c2{background:#2a3a2c} .c3{background:#222e24} .c4{background:#1e2820} .c5{background:#263028}
+.cat-info { padding: .9rem; background: var(--cream); }
+.cat-name { font-family: var(--f-display); font-size: .95rem; font-weight: 600; color: var(--forest); margin-bottom: .2rem; }
+.cat-desc { font-size: .72rem; color: #5a6e5e; line-height: 1.5; }
+.catalog-note { margin-top: 1.5rem; padding: 1rem 1.4rem; background: rgba(46,74,50,.06); border-left: 3px solid var(--moss); border-radius: 0 4px 4px 0; font-size: .83rem; color: #4a5e4e; }
+
+/* SCOPE */
+.s-scope { background: var(--sand); }
+.scope-inner { max-width: 1100px; width: 100%; }
+.pages-list { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.1rem; margin-top: 2.5rem; }
+.page-item { border: 1px solid rgba(90,126,96,.2); border-radius: 6px; overflow: hidden; transition: box-shadow .2s, transform .2s; }
+.page-item:hover { box-shadow: 0 10px 28px rgba(26,42,30,.1); transform: translateY(-3px); }
+.page-bar { background: var(--forest); padding: .7rem 1rem; display: flex; align-items: center; gap: .5rem; }
+.page-bar-dot { width: 7px; height: 7px; border-radius: 50%; }
+.page-bar-url { font-family: var(--f-mono); font-size: .55rem; color: var(--fern); letter-spacing: .05em; }
+.page-content { padding: 1rem; background: var(--white); }
+.page-name { font-family: var(--f-display); font-size: .95rem; font-weight: 600; color: var(--forest); margin-bottom: .5rem; }
+.page-features { list-style: none; display: flex; flex-direction: column; gap: .28rem; }
+.page-features li { font-size: .74rem; color: #4a5e4e; padding-left: .9rem; position: relative; line-height: 1.5; }
+.page-features li::before { content: '→'; position: absolute; left: 0; color: var(--sage); font-size: .65rem; }
+.scope-extras { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.3rem; }
+.scope-tag { font-family: var(--f-mono); font-size: .57rem; letter-spacing: .12em; color: var(--moss); background: rgba(46,74,50,.1); padding: .28rem .7rem; border-radius: 20px; text-transform: uppercase; }
+
+/* STACK */
+.s-stack { background: var(--forest); }
+.stack-inner { max-width: 1000px; width: 100%; }
+.stack-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.2rem; margin-top: 2.5rem; }
+.stack-card { background: rgba(255,255,255,.04); border: 1px solid rgba(154,184,158,.1); border-radius: 8px; padding: 1.6rem; border-bottom: 3px solid transparent; transition: border-bottom-color .2s, background .2s; }
+.stack-card:hover { border-bottom-color: var(--fern); background: rgba(154,184,158,.06); }
+.stack-highlight { background: rgba(196,124,32,.08) !important; border-color: rgba(196,124,32,.25) !important; }
+.stack-icon { font-size: 1.7rem; margin-bottom: .9rem; display: block; }
+.stack-layer { font-family: var(--f-mono); font-size: .57rem; letter-spacing: .18em; color: var(--ochre); text-transform: uppercase; margin-bottom: .3rem; }
+.stack-name { font-family: var(--f-display); font-size: 1.3rem; font-weight: 600; color: var(--white); margin-bottom: .4rem; }
+.stack-desc { font-size: .8rem; color: var(--fern); line-height: 1.65; }
+
+/* TIMELINE */
+.s-timeline { background: var(--white); }
+.timeline-inner { max-width: 880px; width: 100%; }
+.timeline { position: relative; margin-top: 2.5rem; padding-left: 1.5rem; }
+.timeline::before { content: ''; position: absolute; top: 8px; bottom: 0; left: 0; width: 2px; background: linear-gradient(to bottom, var(--forest) 0%, var(--fern) 70%, transparent 100%); }
+.t-item { position: relative; padding: 0 0 2.3rem 2rem; display: grid; grid-template-columns: 140px 1fr; gap: 1.5rem; align-items: start; }
+.t-dot { position: absolute; left: -5px; top: 5px; width: 12px; height: 12px; background: var(--white); border: 2px solid var(--forest); border-radius: 50%; }
+.t-dot.live { background: var(--terra); border-color: var(--terra); }
+.t-time { font-family: var(--f-mono); font-size: .6rem; letter-spacing: .1em; color: var(--terra); padding-top: .25rem; text-transform: uppercase; }
+.t-content h4 { font-family: var(--f-display); font-size: 1.1rem; font-weight: 600; color: var(--forest); margin-bottom: .32rem; }
+.t-content p { font-size: .82rem; color: #4a5e4e; line-height: 1.65; }
+.t-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+.t-tag { font-family: var(--f-mono); font-size: .55rem; letter-spacing: .1em; background: var(--sand); color: var(--moss); padding: .2rem .6rem; border-radius: 20px; }
+
+/* PRICING */
+.s-pricing { background: var(--forest); }
+.s-pricing .slide-title { color: var(--white); }
+.s-pricing .eyebrow { color: var(--fern); }
+.pricing-inner { max-width: 1050px; width: 100%; }
+.pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.2rem; margin-top: 2.5rem; }
+.price-card { background: rgba(255,255,255,.04); border: 1px solid rgba(154,184,158,.12); border-radius: 8px; padding: 2rem 1.5rem; position: relative; transition: border-color .25s, transform .25s; }
+.price-card:hover { transform: translateY(-4px); border-color: rgba(154,184,158,.3); }
+.price-card.featured { background: rgba(196,124,32,.1); border-color: rgba(196,124,32,.35); }
+.price-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--ochre); color: var(--white); font-family: var(--f-mono); font-size: .52rem; letter-spacing: .2em; text-transform: uppercase; padding: .25rem .9rem; border-radius: 20px; white-space: nowrap; }
+.price-plan { font-family: var(--f-mono); font-size: .6rem; letter-spacing: .2em; color: var(--sage); text-transform: uppercase; margin-bottom: .6rem; }
+.price-name { font-family: var(--f-display); font-size: 1.45rem; font-weight: 700; color: var(--white); margin-bottom: .8rem; }
+.price-amount { font-family: var(--f-display); font-size: 2.5rem; font-weight: 700; color: var(--white); line-height: 1; }
+.price-amount sup { font-size: 1rem; vertical-align: super; color: var(--fern); font-weight: 400; }
+.price-amount sub { font-size: .82rem; color: var(--fern); font-weight: 300; font-family: var(--f-body); }
+.price-time { font-family: var(--f-mono); font-size: .57rem; color: var(--sage); letter-spacing: .1em; margin-top: .35rem; margin-bottom: 1.3rem; display: block; }
+.price-includes { list-style: none; display: flex; flex-direction: column; gap: .42rem; margin-bottom: 1.3rem; }
+.price-includes li { font-size: .79rem; color: var(--fern); display: flex; gap: .6rem; align-items: flex-start; line-height: 1.5; }
+.price-includes li::before { content: '✓'; color: var(--ochre); flex-shrink: 0; font-size: .76rem; }
+.price-includes li.muted { color: var(--sage); }
+.price-includes li.muted::before { content: '—'; color: var(--sage); }
+.price-note { font-size: .71rem; color: var(--sage); line-height: 1.5; padding-top: .9rem; border-top: 1px solid rgba(154,184,158,.1); }
+
+/* WHY */
+.s-why { background: var(--cream); }
+.why-inner { max-width: 1100px; width: 100%; }
+.why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+.why-cards { display: flex; flex-direction: column; gap: .9rem; }
+.why-card { display: flex; gap: 1.1rem; align-items: flex-start; padding: 1.1rem; background: var(--white); border-radius: 6px; border-left: 3px solid var(--ochre); transition: box-shadow .2s; }
+.why-card:hover { box-shadow: 0 8px 20px rgba(26,42,30,.08); }
+.why-icon { font-size: 1.25rem; flex-shrink: 0; }
+.why-card h4 { font-size: .87rem; font-weight: 600; color: var(--forest); margin-bottom: .2rem; }
+.why-card p { font-size: .77rem; color: #5a6e5e; line-height: 1.6; }
+
+/* CTA */
+.s-cta { background: var(--terra); flex-direction: column; text-align: center; min-height: 70vh; }
+.s-cta::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='1' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E"); }
+.cta-label { font-family: var(--f-mono); font-size: .63rem; letter-spacing: .35em; color: rgba(255,255,255,.5); text-transform: uppercase; margin-bottom: 1.5rem; position: relative; }
+.cta-big { font-family: var(--f-display); font-size: clamp(3rem, 7vw, 6rem); font-weight: 700; line-height: .9; color: var(--white); position: relative; }
+.cta-big em { font-style: italic; display: block; }
+.cta-sub { font-size: .95rem; font-weight: 300; color: rgba(255,255,255,.75); max-width: 380px; margin: 2rem auto; position: relative; line-height: 1.7; }
+.cta-people { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; position: relative; }
+.cta-person { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); border-radius: 6px; padding: 1.3rem 2rem; text-align: left; }
+.cta-person-label { font-family: var(--f-mono); font-size: .55rem; color: rgba(255,255,255,.45); letter-spacing: .18em; text-transform: uppercase; margin-bottom: .4rem; }
+.cta-person-name { font-family: var(--f-display); font-size: 1.15rem; font-weight: 700; color: var(--white); margin-bottom: .3rem; font-style: italic; }
+.cta-person-phone { font-family: var(--f-mono); font-size: .8rem; color: rgba(255,255,255,.88); letter-spacing: .05em; }
+
+@media (max-width: 1000px) {
+  .split { grid-template-columns: 1fr; gap: 2.5rem; }
+  .catalog-grid { grid-template-columns: repeat(3,1fr); }
+  .pages-list { grid-template-columns: 1fr 1fr; }
+  .stack-grid { grid-template-columns: 1fr 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
+  .why-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .t-item { grid-template-columns: 1fr; gap: .3rem; }
+  .solution-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .catalog-grid { grid-template-columns: 1fr 1fr; }
+  .pages-list { grid-template-columns: 1fr; }
+  .stack-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="progress" id="progress"></div>
+
+<nav>
+  <div class="nav-brand">Cecropia <span>· Propuesta E-Commerce</span></div>
+  <div class="nav-slides" id="navDots"></div>
+</nav>
+
+<!-- 1 · COVER -->
+<section class="slide s-cover" id="slide-0">
+  <div class="cover-grid-bg"></div>
+  <p class="cover-eyebrow">Propuesta comercial · 2025</p>
+  <h1 class="cover-title">Tu marca en el<em>mundo digital</em></h1>
+  <p class="cover-subtitle">Una tienda en línea que centraliza ventas, cuenta la historia de Cecropia y convierte seguidores en clientes fieles.</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><span class="val">5</span><span class="lbl">Categorías</span></div>
+    <div class="cover-divider"></div>
+    <div class="cover-meta-item"><span class="val">8</span><span class="lbl">Semanas</span></div>
+    <div class="cover-divider"></div>
+    <div class="cover-meta-item"><span class="val">100%</span><span class="lbl">A medida</span></div>
+    <div class="cover-divider"></div>
+    <div class="cover-meta-item"><span class="val">∞</span><span class="lbl">Autonomía</span></div>
+  </div>
+  <div class="cover-scroll-hint"><span>Explorar</span><div class="scroll-arrow"></div></div>
+</section>
+
+<!-- 2 · PROBLEMA -->
+<section class="slide s-problem" id="slide-1">
+  <div class="split">
+    <div>
+      <p class="eyebrow">— El desafío</p>
+      <h2 class="slide-title">Instagram y WhatsApp<br/>no son suficientes<br/><em>para crecer.</em></h2>
+      <p class="slide-body">Cecropia ya tiene productos increíbles y una historia poderosa. El problema es que hoy venden por canales que no les pertenecen, sin datos de sus clientes y sin poder mostrar todo su catálogo como merece.</p>
+    </div>
+    <div class="problem-cards">
+      <div class="problem-card">
+        <div class="problem-icon">📱</div>
+        <div><h4>Ventas manuales por IG y WhatsApp</h4><p>Cada venta depende de un mensaje manual. Sin automatización, sin historial, sin escalabilidad.</p></div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🧥</div>
+        <div><h4>5 categorías sin vitrina organizada</h4><p>Chaquetas, polares, cuellos, accesorios — sin una tienda el cliente no ve todo lo que Cecropia ofrece.</p></div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🌿</div>
+        <div><h4>La historia de marca se pierde</h4><p>El relato del ecólogo y el diseñador, los animales colombianos, la filosofía sostenible — todo se diluye en una bio de 150 caracteres.</p></div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📊</div>
+        <div><h4>Cero datos propios de clientes</h4><p>Sin tienda propia no hay emails, historial de compra, ni forma de medir qué productos funcionan mejor.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · SOLUCIÓN -->
+<section class="slide s-solution" id="slide-2">
+  <div class="split">
+    <div>
+      <p class="eyebrow">— La solución</p>
+      <h2 class="slide-title">Un canal propio que<br/>trabaja por ustedes<br/><em>24 horas.</em></h2>
+      <p class="slide-body">Construyo una tienda a medida donde Cecropia tiene control total: agregan productos solos, reciben pedidos automáticamente y cuentan su historia sin depender de algoritmos ajenos.</p>
+    </div>
+    <div class="solution-grid">
+      <div class="sol-card"><p class="sol-num">01 / AUTONOMÍA</p><h4 class="sol-title">Panel propio</h4><p class="sol-desc">Agregan o editan productos, precios y fotos desde un panel visual tan fácil como editar un documento de Google.</p></div>
+      <div class="sol-card"><p class="sol-num">02 / CATÁLOGO</p><h4 class="sol-title">Las 5 categorías</h4><p class="sol-desc">Chaquetas, polares, cuellos, accesorios — todo organizado con fichas técnicas, tallas y la historia del animal de cada edición.</p></div>
+      <div class="sol-card"><p class="sol-num">03 / VENTAS</p><h4 class="sol-title">Pedidos automáticos</h4><p class="sol-desc">El cliente compra, paga con PSE o Nequi y les llega una notificación. Sin mensajes manuales, sin malentendidos.</p></div>
+      <div class="sol-card"><p class="sol-num">04 / RELATO</p><h4 class="sol-title">Marca completa</h4><p class="sol-desc">Universo Animal, Manifiesto, historia de los fundadores — todo en una experiencia que enamora antes de la compra.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · CATÁLOGO -->
+<section class="slide s-catalog" id="slide-3">
+  <div class="catalog-inner">
+    <p class="eyebrow">— Productos a mostrar</p>
+    <h2 class="slide-title">Todo el universo<br/><em>Cecropia en línea</em></h2>
+    <div class="catalog-grid">
+      <div class="cat-card"><div class="cat-img c1">🧥</div><div class="cat-info"><p class="cat-name">Chaquetas</p><p class="cat-desc">Ligera, Térmica y Completa. Con infografía de materiales por variante.</p></div></div>
+      <div class="cat-card"><div class="cat-img c2">🥶</div><div class="cat-info"><p class="cat-name">Polares</p><p class="cat-desc">Fleece de alto rendimiento para climas fríos y ecosistemas de altura.</p></div></div>
+      <div class="cat-card"><div class="cat-img c3">🦎</div><div class="cat-info"><p class="cat-name">Ediciones Animal</p><p class="cat-desc">Cada prenda vinculada a una especie colombiana con su historia.</p></div></div>
+      <div class="cat-card"><div class="cat-img c4">🧣</div><div class="cat-info"><p class="cat-name">Cuellos</p><p class="cat-desc">Complementos técnicos para actividades outdoor y días de frío.</p></div></div>
+      <div class="cat-card"><div class="cat-img c5">🎒</div><div class="cat-info"><p class="cat-name">Accesorios</p><p class="cat-desc">Bolsos y complementos con la identidad visual de la marca.</p></div></div>
+    </div>
+    <div class="catalog-note">💡 <strong>Autonomía total:</strong> Ustedes agregan, editan o eliminan cualquier producto desde el panel de administración, sin necesidad de contactar al desarrollador.</div>
+  </div>
+</section>
+
+<!-- 5 · PÁGINAS -->
+<section class="slide s-scope" id="slide-4">
+  <div class="scope-inner">
+    <p class="eyebrow">— Alcance del proyecto</p>
+    <h2 class="slide-title">Qué páginas<br/><em>se construyen</em></h2>
+    <div class="pages-list">
+      <div class="page-item">
+        <div class="page-bar"><div class="page-bar-dot" style="background:#4a9a50"></div><div class="page-bar-dot" style="background:#c4832a"></div><div class="page-bar-dot" style="background:#b84a24"></div><span class="page-bar-url">/ inicio</span></div>
+        <div class="page-content"><p class="page-name">🏠 Home</p><ul class="page-features"><li>Hero con imagen/video de ecosistema</li><li>Las 5 categorías destacadas</li><li>Especie animal del mes</li><li>Historia de la marca</li><li>Reseñas de clientes</li></ul></div>
+      </div>
+      <div class="page-item">
+        <div class="page-bar"><div class="page-bar-dot" style="background:#4a9a50"></div><div class="page-bar-dot" style="background:#c4832a"></div><div class="page-bar-dot" style="background:#b84a24"></div><span class="page-bar-url">/ catalogo</span></div>
+        <div class="page-content"><p class="page-name">🛍️ Catálogo</p><ul class="page-features"><li>Filtro por categoría</li><li>Filtro por talla y color</li><li>Orden por precio / popularidad</li><li>Vista cuadrícula y lista</li></ul></div>
+      </div>
+      <div class="page-item">
+        <div class="page-bar"><div class="page-bar-dot" style="background:#4a9a50"></div><div class="page-bar-dot" style="background:#c4832a"></div><div class="page-bar-dot" style="background:#b84a24"></div><span class="page-bar-url">/ producto/:id</span></div>
+        <div class="page-content"><p class="page-name">🧥 Producto</p><ul class="page-features"><li>Galería: front, back, detalle de tela</li><li>Infografía de materiales</li><li>Selector de talla con guía</li><li>Historia del animal de la edición</li><li>Compra + link a WhatsApp</li></ul></div>
+      </div>
+      <div class="page-item">
+        <div class="page-bar"><div class="page-bar-dot" style="background:#4a9a50"></div><div class="page-bar-dot" style="background:#c4832a"></div><div class="page-bar-dot" style="background:#b84a24"></div><span class="page-bar-url">/ universo</span></div>
+        <div class="page-content"><p class="page-name">🦎 Universo Animal</p><ul class="page-features"><li>Tití, Oso Palmero, Rana Dardo…</li><li>Ecosistema de origen de cada especie</li><li>Prenda asociada a cada animal</li></ul></div>
+      </div>
+      <div class="page-item">
+        <div class="page-bar"><div class="page-bar-dot" style="background:#4a9a50"></div><div class="page-bar-dot" style="background:#c4832a"></div><div class="page-bar-dot" style="background:#b84a24"></div><span class="page-bar-url">/ nosotros</span></div>
+        <div class="page-content"><p class="page-name">🌿 Nosotros</p><ul class="page-features"><li>Historia del ecólogo y el diseñador</li><li>Filosofía sostenible y cero desperdicio</li><li>El árbol Cecropia como símbolo</li></ul></div>
+      </div>
+      <div class="page-item">
+        <div class="page-bar"><div class="page-bar-dot" style="background:#4a9a50"></div><div class="page-bar-dot" style="background:#c4832a"></div><div class="page-bar-dot" style="background:#b84a24"></div><span class="page-bar-url">/ carrito · / checkout</span></div>
+        <div class="page-content"><p class="page-name">🛒 Carrito & Pago</p><ul class="page-features"><li>Carrito lateral con resumen</li><li>Checkout en 2 pasos</li><li>PSE, Nequi y tarjeta vía Wompi</li><li>Confirmación automática por email</li></ul></div>
+      </div>
+    </div>
+    <div class="scope-extras">
+      <span class="scope-tag">✓ Panel admin propio</span>
+      <span class="scope-tag">✓ Gestión de inventario</span>
+      <span class="scope-tag">✓ SEO básico</span>
+      <span class="scope-tag">✓ Dominio .co</span>
+      <span class="scope-tag">✓ SSL / HTTPS</span>
+      <span class="scope-tag">✓ Optimización móvil</span>
+      <span class="scope-tag">✓ Google Analytics 4</span>
+      <span class="scope-tag">✓ Botón WhatsApp flotante</span>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · STACK -->
+<section class="slide s-stack" id="slide-5">
+  <div class="stack-inner">
+    <p class="eyebrow">— Tecnología</p>
+    <h2 class="slide-title" style="color:var(--white)">Construido con las<br/><em style="color:var(--fern)">mejores herramientas</em></h2>
+    <div class="stack-grid">
+      <div class="stack-card">
+        <span class="stack-icon">⚛️</span>
+        <p class="stack-layer">Frontend</p>
+        <h4 class="stack-name">Next.js</h4>
+        <p class="stack-desc">La tienda que ven los clientes — rápida, moderna y optimizada para aparecer en Google. Animaciones fluidas y diseño 100% a la medida de Cecropia.</p>
+      </div>
+      <div class="stack-card stack-highlight">
+        <span class="stack-icon">📝</span>
+        <p class="stack-layer">Panel de contenido</p>
+        <h4 class="stack-name">Sanity CMS</h4>
+        <p class="stack-desc">El panel donde ustedes agregan productos, suben fotos y editan precios. Tan fácil como un documento de Google. Sin depender del desarrollador, nunca.</p>
+      </div>
+      <div class="stack-card stack-highlight">
+        <span class="stack-icon">🔥</span>
+        <p class="stack-layer">Base de datos</p>
+        <h4 class="stack-name">Firebase</h4>
+        <p class="stack-desc">Gestiona órdenes, inventario, usuarios y el carrito en tiempo real. Cada pedido queda registrado automáticamente. Escalable desde el primer día.</p>
+      </div>
+      <div class="stack-card">
+        <span class="stack-icon">💳</span>
+        <p class="stack-layer">Pagos Colombia</p>
+        <h4 class="stack-name">Wompi</h4>
+        <p class="stack-desc">PSE, Nequi, tarjeta débito/crédito. Integración nativa para el mercado colombiano. Sin mensualidades — solo pagan por transacción exitosa.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · CRONOGRAMA -->
+<section class="slide s-timeline" id="slide-6">
+  <div class="timeline-inner">
+    <p class="eyebrow">— Cronograma</p>
+    <h2 class="slide-title">De cero a<br/><em>lanzamiento</em></h2>
+    <div class="timeline">
+      <div class="t-item">
+        <div class="t-dot live"></div>
+        <p class="t-time">Semana 1 – 2</p>
+        <div class="t-content">
+          <h4>Diseño y estructura</h4>
+          <p>Wireframes de todas las páginas, sistema de diseño (colores, tipografías, componentes). Revisión y aprobación con el equipo de Cecropia.</p>
+          <div class="t-tags"><span class="t-tag">Figma</span><span class="t-tag">Sistema de diseño</span><span class="t-tag">Feedback</span></div>
+        </div>
+      </div>
+      <div class="t-item">
+        <div class="t-dot"></div>
+        <p class="t-time">Semana 3 – 4</p>
+        <div class="t-content">
+          <h4>Frontend + Sanity CMS</h4>
+          <p>Maquetación de Home, Catálogo y Producto. Configuración del panel Sanity para que el equipo empiece a cargar sus productos durante el desarrollo.</p>
+          <div class="t-tags"><span class="t-tag">Next.js</span><span class="t-tag">Sanity CMS</span><span class="t-tag">Animaciones</span></div>
+        </div>
+      </div>
+      <div class="t-item">
+        <div class="t-dot"></div>
+        <p class="t-time">Semana 5 – 6</p>
+        <div class="t-content">
+          <h4>Firebase + Pagos + Contenido</h4>
+          <p>Carrito con Firebase, checkout con Wompi, páginas de Universo Animal y Nosotros. Carga del catálogo completo de las 5 categorías.</p>
+          <div class="t-tags"><span class="t-tag">Firebase</span><span class="t-tag">Wompi</span><span class="t-tag">Contenido</span></div>
+        </div>
+      </div>
+      <div class="t-item">
+        <div class="t-dot"></div>
+        <p class="t-time">Semana 7 – 8</p>
+        <div class="t-content">
+          <h4>Pruebas, SEO y lanzamiento</h4>
+          <p>Pruebas en todos los dispositivos, velocidad, SEO, dominio cecropia.co, Analytics y capacitación del equipo para manejar el panel autónomamente.</p>
+          <div class="t-tags"><span class="t-tag">QA</span><span class="t-tag">SEO</span><span class="t-tag">Capacitación</span><span class="t-tag">🚀 Go live</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · INVERSIÓN -->
+<section class="slide s-pricing" id="slide-7">
+  <div class="pricing-inner">
+    <p class="eyebrow">— Inversión</p>
+    <h2 class="slide-title">Elige el plan<br/><em>que necesitan</em></h2>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <p class="price-plan">Esencial</p>
+        <h4 class="price-name">Cecropia Basic</h4>
+        <div class="price-amount"><sup>$</sup>2.500.000<sub> COP</sub></div>
+        <span class="price-time">· Entrega en 5 semanas</span>
+        <ul class="price-includes">
+          <li>Home + Catálogo + Producto</li>
+          <li>Panel Sanity (agregar productos solos)</li>
+          <li>Firebase para órdenes</li>
+          <li>Carrito y pago con Wompi</li>
+          <li>Optimización móvil</li>
+          <li class="muted">Universo Animal</li>
+          <li class="muted">Soporte post-entrega</li>
+        </ul>
+        <p class="price-note">Para arrancar rápido y validar ventas online.</p>
+      </div>
+      <div class="price-card featured">
+        <div class="price-badge">RECOMENDADO</div>
+        <p class="price-plan">Completo</p>
+        <h4 class="price-name">Cecropia Pro</h4>
+        <div class="price-amount"><sup>$</sup>4.500.000<sub> COP</sub></div>
+        <span class="price-time">· Entrega en 8 semanas</span>
+        <ul class="price-includes">
+          <li>Todo el Plan Esencial</li>
+          <li>Universo Animal (fichas de especies)</li>
+          <li>Página Nosotros / Manifiesto</li>
+          <li>Botón WhatsApp flotante</li>
+          <li>SEO básico + Google Analytics</li>
+          <li>Capacitación del equipo incluida</li>
+          <li>Soporte 3 meses incluido</li>
+        </ul>
+        <p class="price-note">La tienda completa que refleja todo el universo de la marca.</p>
+      </div>
+      <div class="price-card">
+        <p class="price-plan">Premium</p>
+        <h4 class="price-name">Cecropia Full</h4>
+        <div class="price-amount"><sup>$</sup>7.000.000<sub> COP</sub></div>
+        <span class="price-time">· Entrega en 10 semanas</span>
+        <ul class="price-includes">
+          <li>Todo el Plan Pro</li>
+          <li>Mapa interactivo de ecosistemas</li>
+          <li>Blog editorial de naturaleza</li>
+          <li>Integración con Instagram Shopping</li>
+          <li>Email marketing automatizado</li>
+          <li>Soporte 6 meses incluido</li>
+        </ul>
+        <p class="price-note">Para dominar su categoría desde el día uno.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · POR QUÉ YO -->
+<section class="slide s-why" id="slide-8">
+  <div class="why-inner">
+    <div class="why-grid">
+      <div>
+        <p class="eyebrow">— Por qué trabajar conmigo</p>
+        <h2 class="slide-title">No solo código:<br/><em>criterio</em> y cuidado.</h2>
+        <p class="slide-body" style="margin-top:1.2rem">Entiendo que Cecropia no es una tienda más. Es una marca con alma, con relato y con propósito. Por eso, cada decisión de diseño y desarrollo estará alineada con lo que hace especial a esta marca.</p>
+      </div>
+      <div class="why-cards">
+        <div class="why-card"><div class="why-icon">🎯</div><div><h4>Desarrollo a medida, no plantillas</h4><p>Cada pixel diseñado para reflejar la identidad visual de Cecropia. Nada genérico.</p></div></div>
+        <div class="why-card"><div class="why-icon">🔑</div><div><h4>Ustedes tienen el control</h4><p>Con Sanity CMS agregan productos, cambian precios y actualizan contenido sin depender de mí.</p></div></div>
+        <div class="why-card"><div class="why-icon">🇨🇴</div><div><h4>Conocimiento del mercado colombiano</h4><p>Pagos locales (PSE, Nequi), envíos nacionales y experiencia optimizada para usuarios colombianos.</p></div></div>
+        <div class="why-card"><div class="why-icon">📚</div><div><h4>Capacitación incluida</h4><p>Al entregar el proyecto les enseño a manejar el panel, subir productos y leer las métricas de venta.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · CTA -->
+<section class="slide s-cta" id="slide-9">
+  <p class="cta-label">— Siguiente paso</p>
+  <h2 class="cta-big">¿Arrancamos<em>juntos?</em></h2>
+  <p class="cta-sub">Con un anticipo del 50% iniciamos la primera semana.<br/>El resto contra entrega del proyecto aprobado.</p>
+  <div class="cta-people">
+    <div class="cta-person">
+      <p class="cta-person-label">Contáctame</p>
+      <p class="cta-person-name">Santiago García</p>
+      <p class="cta-person-phone">📱 314 219 4646</p>
+    </div>
+    <div class="cta-person">
+      <p class="cta-person-label">Contáctame</p>
+      <p class="cta-person-name">Jonathan Moreno</p>
+      <p class="cta-person-phone">📱 319 725 7100</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  const cursor = document.getElementById('cursor');
+  const ring   = document.getElementById('cursorRing');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top  = e.clientY + 'px';
+    setTimeout(() => { ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px'; }, 80);
+  });
+
+  const slides   = document.querySelectorAll('.slide');
+  const total    = slides.length;
+  const bar      = document.getElementById('progress');
+  const dotsWrap = document.getElementById('navDots');
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('button');
+    d.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    d.setAttribute('aria-label', 'Sección ' + (i+1));
+    d.addEventListener('click', () => slides[i].scrollIntoView({ behavior: 'smooth' }));
+    dotsWrap.appendChild(d);
+  });
+
+  const dotEls = document.querySelectorAll('.nav-dot');
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = Array.from(slides).indexOf(entry.target);
+        dotEls.forEach((d, i) => d.classList.toggle('active', i === idx));
+        bar.style.width = ((idx + 1) / total * 100) + '%';
+      }
+    });
+  }, { threshold: 0.25 });
+
+  slides.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
